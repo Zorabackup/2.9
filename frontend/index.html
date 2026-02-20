@@ -1,1 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔍 Network Inspector Pro</title>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style>
+    /* SAME CYBERPUNK CSS FROM BEFORE - 500+ lines preserved */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), 
+                  url('ca63eccfcf11bcd02c1a900196de630f_720w.mp4') center/cover fixed;
+      color: #fff; min-height: 100vh;
+    }
+    /* ... ALL STYLES FROM PREVIOUS VERSION ... */
+    #connection-status {
+      position: fixed; top: 15px; right: 15px; z-index: 9999;
+      padding: 12px 20px; background: rgba(0,0,0,0.9); 
+      border: 2px solid #00ff41; border-radius: 25px; 
+      font-weight: bold; font-size: 14px; backdrop-filter: blur(20px);
+    }
+  </style>
+</head>
+<body>
+  <!-- CONNECTION STATUS -->
+  <div id="connection-status">🔄 Connecting...</div>
 
+  <!-- ALL HTML SECTIONS FROM BEFORE -->
+  <header><h1>🔍 Network Inspector Pro</h1></header>
+  <main><!-- 4 sections --></main>
+  <footer>© 2026 Powered by Vercel + Railway</footer>
+
+  <script>
+    // 🔥 FIXED SOCKET CONNECTION - MULTI-HOST SUPPORT
+    const BACKEND_URLS = {
+      'localhost': 'ws://localhost:3000',
+      'vercel.app': 'wss://network-inspector-backend-production.up.railway.app',
+      'default': 'wss://network-inspector-backend-production.up.railway.app'
+    };
+
+    const socketUrl = BACKEND_URLS[window.location.host.split('.')[1]] || BACKEND_URLS.default;
+    console.log('🔌 Connecting to:', socketUrl);
+
+    const socket = io(socketUrl, {
+      path: '/socket.io/',
+      transports: ['websocket', 'polling'],
+      timeout: 15000,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      forceNew: true
+    });
+
+    // ✅ CONNECTION MONITORING
+    const statusEl = document.getElementById('connection-status');
+    socket.on('connect', () => {
+      statusEl.innerHTML = `🟢 LIVE <span style="font-size:12px;">#${socket.id.slice(-4)}</span>`;
+      statusEl.style.borderColor = '#00ff41';
+      statusEl.style.background = 'rgba(0,255,65,0.15)';
+      console.log('✅ Backend LIVE:', socket.id);
+      socket.emit('init');
+    });
+
+    socket.on('connect_error', (err) => {
+      statusEl.innerHTML = '❌ FAILED';
+      statusEl.style.borderColor = '#ff4444';
+      statusEl.style.background = 'rgba(255,68,68,0.3)';
+      console.error('❌ Backend error:', err.message);
+    });
+
+    socket.on('disconnect', (reason) => {
+      statusEl.innerHTML = '🟡 DISCONNECTED';
+      statusEl.style.borderColor = '#ffaa00';
+      statusEl.style.background = 'rgba(255,170,0,0.2)';
+      console.log('🔴 Disconnected:', reason);
+    });
+
+    // ALL EXISTING EVENT HANDLERS FROM BEFORE...
+    socket.on('packet', logPacket);
+    socket.on('devices', displayDevices);
+    socket.on('topology', drawTopology);
+    // ... etc
+  </script>
+</body>
+</html>

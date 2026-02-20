@@ -1,0 +1,5 @@
+{
+  "name": "network-inspector-frontend",
+  "version": "1.0.0",
+  "scripts": { "deploy": "vercel --prod" }
+}
